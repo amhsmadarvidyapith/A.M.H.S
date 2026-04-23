@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMHS Student App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand: #4f46e5;
+            --brand-dark: #3730a3;
+            --surface: #ffffff;
+            --bg: #f8fafc;
+            --text-title: #0f172a;
+            --text-body: #64748b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            min-height: 100vh;
+            background: var(--bg);
+        }
+
+        .top-nav {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            border-bottom: 1px solid #eee;
+        }
+
+        .logo-text { font-weight: 800; font-size: 20px; color: var(--brand); }
+
+        .logout-pill {
+            background: #fee2e2;
+            color: red;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .header-splash {
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            padding: 40px 25px;
+            color: white;
+            border-radius: 0 0 30px 30px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .item-admin {
+            grid-column: span 2;
+            background: black;
+            color: white;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <nav class="top-nav">
+        <div class="logo-text">Adwaita Mission</div>
+        <button class="logout-pill" onclick="logout()">Logout</button>
+    </nav>
+
+    <header class="header-splash">
+        <h1 id="greeting-text">Welcome, Student!</h1>
+        <p id="last-opened-text">Loading...</p>
+    </header>
+
+    <div class="menu-grid">
+        <div class="menu-item" onclick="location.href='assignments.html'">Assignments</div>
+        <div class="menu-item" onclick="location.href='notice.html'">Notices</div>
+        <div class="menu-item" onclick="location.href='timetable.html'">Time Table</div>
+        <div class="menu-item" onclick="toggleModal(true)">About</div>
+        <div class="menu-item item-admin" onclick="location.href='admin.html'">Admin Panel</div>
+    </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+        <h2>School Info</h2>
+        <button onclick="location.href='founder.html'">Founder</button>
+        <button onclick="location.href='inspiration.html'">Inspiration</button>
+        <br><br>
+        <button onclick="toggleModal(false)">Close</button>
+    </div>
+</div>
+
+<script>
+
+    // 🔐 LOGIN CHECK (FIX)
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+
+    if (!isLoggedIn) {
+        window.location.href = "index.html";
+    }
+
+    // Load data
+    window.onload = function () {
+        const name = localStorage.getItem("studentName") || "Student";
+
+        // Greeting
+        const hour = new Date().getHours();
+        let greet = "Hello";
+
+        if (hour < 12) greet = "Good Morning";
+        else if (hour < 17) greet = "Good Afternoon";
+        else greet = "Good Evening";
+
+        document.getElementById("greeting-text").innerText = greet + ", " + name;
+
+        // Last opened
+        const last = localStorage.getItem("real_last_opened");
+
+        if (last) {
+            document.getElementById("last-opened-text").innerText = "Last session: " + last;
+        } else {
+            document.getElementById("last-opened-text").innerText = "First login";
+        }
+
+        const now = new Date().toLocaleString();
+        localStorage.setItem("real_last_opened", now);
+    };
+
+    function logout() {
+        if (confirm("Logout?")) {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+    }
+
+    function toggleModal(show) {
+        document.getElementById("modalOverlay").style.display = show ? "block" : "none";
+    }
+
+</script>
+
+</body>
