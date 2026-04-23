@@ -260,6 +260,13 @@
     </div>
 
     <script>
+    // 🔐 LOGIN CHECK (FIX)
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+
+    if (!isLoggedIn) {
+        window.location.href = "index.html";
+    }
+
         // --- REAL-TIME FUNCTIONALITY ---
         window.onload = function() {
             // 1. Get User Data
