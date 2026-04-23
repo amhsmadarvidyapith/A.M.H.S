@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AMHS</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h2>Student Login</h2>
+    <input type="number" id="admNo" placeholder="Admission Number">
+    <input type="text" id="stuName" placeholder="Student Name">
+    <button id="loginBtn">Login</button>
+    <p id="msg" style="color:red; font-size: 14px; margin-top: 10px;"></p>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // AUTO-LOGIN CHECK: If already logged in, skip this page
+    if (localStorage.getItem("isLoggedIn") === "true") {
+        window.location.href = "main.html";
+    }
+
+    document.getElementById('loginBtn').onclick = async () => {
+        const adm = document.getElementById('admNo').value;
+        const name = document.getElementById('stuName').value.trim();
+        const msg = document.getElementById('msg');
+
+        if(!adm || !name) { msg.innerText = "Enter all details"; return; }
+
+        try {
+            const q = query(collection(db, "students"), 
+                      where("admissionNo", "==", adm), 
+                      where("studentName", "==", name));
+            
+            const snap = await getDocs(q);
+
+            if (!snap.empty) {
+                const student = snap.docs[0].data();
+                
+                // SAVE TO LOCAL STORAGE
+                localStorage.setItem("isLoggedIn", "true");
+                localStorage.setItem("studentName", student.studentName);
+                localStorage.setItem("studentClass", student.class);
+                localStorage.setItem("studentSection", student.section);
+                localStorage.setItem("admissionNo", student.admissionNo);
+
+                window.location.href = "main.html";
+            } else {
+                msg.innerText = "Invalid Details. Please check Admission No/Name.";
+            }
+        } catch (e) { msg.innerText = "Error: " + e.message; }
+    };
+</script>
+</body>
+</html>
