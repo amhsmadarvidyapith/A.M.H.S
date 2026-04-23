@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Assignments - AMHS</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; }
+        
+        header { 
+            background: #6c5ce7; color: white; padding: 20px; 
+            border-radius: 15px; text-align: center; margin-bottom: 25px; 
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
+        }
+
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+        
+        .tab-btn {
+            flex: 1; padding: 12px; border: none; border-radius: 8px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            background: #dcdde1; color: #2f3640;
+        }
+
+        .tab-btn.active { background: #6c5ce7; color: white; }
+
+        .hw-card {
+            background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #6c5ce7;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hw-subject { font-size: 18px; font-weight: bold; color: #2d3436; margin-bottom: 5px; }
+        .hw-date { font-size: 11px; color: #999; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 10px; }
+        .hw-details { color: #555; line-height: 1.5; white-space: pre-wrap; font-size: 15px; }
+        
+        .empty-state { text-align: center; padding: 40px; background: white; border-radius: 12px; color: #888; }
+        .back-btn { display: block; text-align: center; margin-top: 20px; color: #6c5ce7; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1 id="page-title">Today's Homework</h1>
+        <p id="class-info" style="margin:0; opacity: 0.9;"></p>
+    </header>
+
+    <div class="controls">
+        <button id="btn-today" class="tab-btn active" onclick="loadHomework('today')">Today</button>
+        <button id="btn-history" class="tab-btn" onclick="loadHomework('history')">History</button>
+    </div>
+
+    <div id="hw-list">
+        <div style="text-align: center; padding: 50px;">Loading assignments...</div>
+    </div>
+
+    <a href="main.html" class="back-btn">← Back to Dashboard</a>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const sCls = localStorage.getItem("studentClass");
+    const sSec = localStorage.getItem("studentSection");
+    document.getElementById('class-info').innerText = `Class: ${sCls} | Section: ${sSec}`;
+
+    async function loadHomework(mode) {
+        const listDiv = document.getElementById('hw-list');
+        const title = document.getElementById('page-title');
+        
+        // Update Button UI
+        document.getElementById('btn-today').classList.toggle('active', mode === 'today');
+        document.getElementById('btn-history').classList.toggle('active', mode === 'history');
+        title.innerText = mode === 'today' ? "Today's Homework" : "Homework History";
+
+        listDiv.innerHTML = "<div style='text-align:center; padding:30px;'>Fetching data...</div>";
+
+        try {
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+
+            let q;
+            if (mode === 'today') {
+                // Fetch only today's assignments
+                q = query(
+                    collection(db, "homeworks"), 
+                    where("class", "==", sCls), 
+                    where("section", "==", sSec),
+                    where("timestamp", ">=", todayStart),
+                    orderBy("timestamp", "desc")
+                );
+            } else {
+                // Fetch only older assignments
+                q = query(
+                    collection(db, "homeworks"), 
+                    where("class", "==", sCls), 
+                    where("section", "==", sSec),
+                    where("timestamp", "<", todayStart),
+                    orderBy("timestamp", "desc")
+                );
+            }
+            
+            const snap = await getDocs(q);
+            
+            if (snap.empty) {
+                listDiv.innerHTML = `<div class="empty-state">No ${mode} homework found.</div>`;
+                return;
+            }
+
+            listDiv.innerHTML = "";
+            snap.forEach(doc => {
+                const data = doc.data();
+                const ts = data.timestamp ? new Date(data.timestamp.seconds * 1000) : new Date();
+                
+                const dateStr = ts.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                const timeStr = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                listDiv.innerHTML += `
+                    <div class="hw-card">
+                        <span class="hw-date">${dateStr} • ${timeStr}</span>
+                        <div class="hw-subject">${data.subject}</div>
+                        <div class="hw-details">${data.details}</div>
+                    </div>
+                `;
+            });
+        } catch (err) {
+            console.error(err);
+            listDiv.innerHTML = `<div class="empty-state" style="color:red;">Error loading homework. Please check your internet.</div>`;
+        }
+    }
+
+    // Export to window so buttons can call it
+    window.loadHomework = loadHomework;
+
+    // Load 'today' by default on page open
+    loadHomework('today');
+</script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Time Table</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #f0f2f5; margin: 0; padding: 10px; }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        header {
+            background: #4a90e2;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .table-wrapper {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow-x: auto; /* Allows scrolling on small mobile screens */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px; /* Ensures columns don't get too squished */
+        }
+
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        th {
+            background-color: #4a90e2;
+            color: white;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .period-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            width: 80px;
+        }
+
+        .subject-name {
+            display: block;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+
+        .teacher-name {
+            display: block;
+            font-size: 11px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .today-col {
+            background-color: #e3f2fd; /* Highlights today's column */
+            border: 2px solid #4a90e2;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h2 id="class-title">Weekly Schedule</h2>
+            <p id="class-info" style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;"></p>
+        </header>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="period-header">Period</th>
+                        <th id="col-Monday">Mon</th>
+                        <th id="col-Tuesday">Tue</th>
+                        <th id="col-Wednesday">Wed</th>
+                        <th id="col-Thursday">Thu</th>
+                        <th id="col-Friday">Fri</th>
+                        <th id="col-Saturday">Sat</th>
+                    </tr>
+                </thead>
+                <tbody id="timetable-grid">
+                    </tbody>
+            </table>
+        </div>
+
+        <a href="main.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+            authDomain: "amhs-e7f6d.firebaseapp.com",
+            projectId: "amhs-e7f6d",
+            storageBucket: "amhs-e7f6d.firebasestorage.app",
+            messagingSenderId: "226999110651",
+            appId: "1:226999110651:web:3746238cb0140f1897d95e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const sClass = localStorage.getItem("studentClass");
+        const sSection = localStorage.getItem("studentSection");
+        document.getElementById('class-info').innerText = `Class: ${sClass} | Section: ${sSection}`;
+
+        // Highlight Today's Column
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const todayName = days[new Date().getDay()];
+        if(todayName !== "Sunday") {
+            document.getElementById(`col-${todayName}`).classList.add('today-col');
+        }
+
+        async function loadFullTable() {
+            const grid = document.getElementById('timetable-grid');
+            
+            try {
+                // Fetch ALL entries for this specific class and section
+                const q = query(
+                    collection(db, "timetable"),
+                    where("class", "==", sClass),
+                    where("section", "==", sSection)
+                );
+
+                const snap = await getDocs(q);
+                const dataMap = {};
+
+                // Map data so we can find it by Day and Period easily
+                // Format: dataMap["Monday-1"] = { subject: "Math", teacher: "Mr. X" }
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    dataMap[`${d.day}-${d.period}`] = d;
+                });
+
+                grid.innerHTML = "";
+
+                // Generate 7 Rows (Periods)
+                for (let p = 1; p <= 7; p++) {
+                    let rowHtml = `<tr><td class="period-header">P ${p}</td>`;
+                    
+                    // Generate 6 Columns (Mon-Sat) for each row
+                    const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                    weekDays.forEach(day => {
+                        const entry = dataMap[`${day}-${p}`];
+                        const highlight = (day === todayName) ? 'class="today-col"' : '';
+                        
+                        if (entry) {
+                            rowHtml += `<td ${highlight}>
+                                <span class="subject-name">${entry.subject}</span>
+                                <span class="teacher-name">${entry.teacher}</span>
+                            </td>`;
+                        } else {
+                            rowHtml += `<td ${highlight} style="color:#ccc">-</td>`;
+                        }
+                    });
+
+                    rowHtml += "</tr>";
+                    grid.innerHTML += rowHtml;
+                }
+
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML = "<tr><td colspan='7'>Error loading table.</td></tr>";
+            }
+        }
+
+        loadFullTable();
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Founder - Late Anand Shankar Madhavan</title>
+    <style>
+        :root {
+            --primary-blue: #4a90e2;
+            --deep-gold: #b8860b;
+            --text-dark: #2d3436;
+            --bg-cream: #fdfbf7;
+        }
+
+        body {
+            background-color: #ebe0d0;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Georgia', serif;
+            display: flex;
+            justify-content: center;
+        }
+
+        .document-page {
+            background-color: var(--bg-cream);
+            max-width: 850px;
+            width: 100%;
+            padding: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid #d1c4b2;
+            position: relative;
+            animation: fadeIn 1s ease-in;
+        }
+
+        /* Decorative Border */
+        .document-page::before {
+            content: "";
+            position: absolute;
+            top: 15px; left: 15px; right: 15px; bottom: 15px;
+            border: 1px solid var(--deep-gold);
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .hindi-quote {
+            font-size: 20px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .title {
+            color: #c0392b;
+            font-size: 32px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        /* Founder Photo Styling */
+        .founder-photo-container {
+            float: right;
+            width: 240px;
+            margin-left: 30px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .founder-photo-container img {
+            width: 100%;
+            display: block;
+            border: 1px solid #eee;
+        }
+
+        .content {
+            line-height: 1.8;
+            font-size: 18px;
+            color: #333;
+            text-align: justify;
+        }
+
+        .content p { margin-bottom: 20px; }
+
+        .highlight-name {
+            font-weight: bold;
+            color: #000;
+            font-size: 21px;
+        }
+
+        .footer-info {
+            margin-top: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-blue);
+            font-size: 18px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .page-number {
+            text-align: center;
+            font-weight: bold;
+            color: #888;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            text-decoration: none;
+            color: var(--primary-blue);
+            font-weight: bold;
+            font-family: sans-serif;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 650px) {
+            .founder-photo-container {
+                float: none;
+                margin: 0 auto 25px auto;
+                width: 100%;
+                max-width: 280px;
+            }
+            .document-page { padding: 30px; }
+            .content { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="document-page">
+        <header>
+          
+            <h1 class="title">Founder</h1>
+        </header>
+
+        <article class="content">
+            <div class="founder-photo-container">
+                <img src="founder_madhavan.jpg" alt="Late Anand Shankar Madhavan">
+                <p style="font-size: 13px; text-align: center; margin: 10px 0 0 0; font-family: sans-serif; color: #666;">
+                    Late Anand Shankar Madhavan
+                </p>
+            </div>
+
+            <p>
+                <span class="highlight-name">Late Anand Shankar Madhavan</span>, a visionary and legendary luminary sacrificed and dedicated his whole life to the cause of social service and promotion of ideal and quality education for the younger generation.
+            </p>
+
+            <p>
+                Being non-Hindi speaking from Kerala, he chose to remain at this remote place with rural surroundings at the foot of Mandar Hills. With a view to propagate Hindi language among the masses, he established <strong>Mandar Vidyapith</strong> in 1945 and later on founded <strong>Adwaita Mission</strong> in 1990.
+            </p>
+
+            <p>
+                Madhavan, a product of Jamia Millia, an old pupil, and a devout disciple of Late Dr. Zakir Hussain was a staunch nationalist, a great freedom fighter, a true Gandhian, a philanthropist and social worker.
+            </p>
+
+            <p>
+                A man of simple living, but high thinking, he was a literary figure, a man of academic repute, a thinker and writer par excellence with philosophical instincts. He wrote more than 55 books on varied subjects viz literature, culture, education, religion etc.
+            </p>
+        </article>
+
+        <div class="footer-info">Adwaita Mission</div>
+        <div class="page-number"></div>
+
+        <a href="main.html" class="back-link">← Back to Dashboard</a>
+    </div>
+
+</body>
+</html>

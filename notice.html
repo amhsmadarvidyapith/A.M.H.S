@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Notices - AMHS</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #f0f2f5; margin: 0; padding: 20px; }
+
+        .container { max-width: 700px; margin: 0 auto; }
+
+        header {
+            background: #4a90e2;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .notice-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 6px solid #4a90e2;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notice-date {
+            font-size: 12px;
+            color: #888;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .notice-title {
+            font-size: 20px;
+            color: #2d3436;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+
+        .notice-body {
+            color: #555;
+            line-height: 1.6;
+            font-size: 15px;
+            white-space: pre-wrap; /* Keeps line breaks from admin input */
+        }
+
+        .loading { text-align: center; color: #666; padding: 50px; }
+        
+        .back-btn {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Important Tag for Urgent Notices */
+        .urgent-tag {
+            background: #ff4d4d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>School Notices</h1>
+            <p style="margin:0; opacity: 0.9;">Official announcements and updates</p>
+        </header>
+
+        <div id="notice-list">
+            <div class="loading">Fetching latest notices...</div>
+        </div>
+
+        <a href="main.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+            authDomain: "amhs-e7f6d.firebaseapp.com",
+            projectId: "amhs-e7f6d",
+            storageBucket: "amhs-e7f6d.firebasestorage.app",
+            messagingSenderId: "226999110651",
+            appId: "1:226999110651:web:3746238cb0140f1897d95e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadNotices() {
+            const listDiv = document.getElementById('notice-list');
+            
+            try {
+                // Fetch notices sorted by date (newest first)
+                const q = query(collection(db, "notices"), orderBy("timestamp", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    listDiv.innerHTML = `<div class="notice-card" style="text-align:center; border:none;">No notices posted yet.</div>`;
+                    return;
+                }
+
+                listDiv.innerHTML = ""; // Clear loader
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Format the timestamp
+                    const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString('en-GB', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                    }) : "Recently";
+
+                    listDiv.innerHTML += `
+                        <div class="notice-card">
+                            <span class="notice-date">${date}</span>
+                            <h2 class="notice-title">${data.title}</h2>
+                            <div class="notice-body">${data.message}</div>
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                console.error(error);
+                listDiv.innerHTML = `<div class="notice-card" style="color:red;">Error loading notices. Please check your connection.</div>`;
+            }
+        }
+
+        loadNotices();
+    </script>
+</body>
+</html>
