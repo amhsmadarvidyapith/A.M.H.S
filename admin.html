@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMHS Admin - Mobile</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --dark: #2d3436;
+            --bg: #f4f7f6;
+            --danger: #ff4d4d;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
+        body { background-color: var(--bg); margin: 0; padding: 0; }
+
+        /* PASSWORD OVERLAY */
+        #admin-lock-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark); display: flex; justify-content: center; align-items: center; z-index: 10000;
+        }
+        .lock-box { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 85%; }
+
+        /* MOBILE HEADER & NAV */
+        header {
+            background: var(--dark); color: white; padding: 15px;
+            text-align: center; position: sticky; top: 0; z-index: 999;
+        }
+
+        nav {
+            display: flex; overflow-x: auto; background: white;
+            border-bottom: 1px solid #ddd; padding: 5px; gap: 10px;
+            scrollbar-width: none; /* Hide scrollbar for clean look */
+        }
+        nav::-webkit-scrollbar { display: none; }
+
+        .nav-btn {
+            white-space: nowrap; padding: 10px 20px; border: none;
+            background: #eee; border-radius: 20px; font-size: 14px;
+            font-weight: bold; color: var(--dark); cursor: pointer;
+        }
+        .nav-btn.active { background: var(--primary); color: white; }
+
+        /* CONTENT AREA */
+        .main-content { padding: 15px; padding-bottom: 80px; }
+        .section { display: none; animation: fadeIn 0.3s ease; }
+        .section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .card { 
+            background: white; padding: 20px; border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; 
+        }
+
+        h3 { margin: 0 0 15px 0; font-size: 18px; color: var(--dark); border-left: 4px solid var(--primary); padding-left: 10px; }
+
+        /* FORM ELEMENTS (Finger-Friendly) */
+        label { display: block; margin-top: 15px; font-size: 14px; font-weight: 600; }
+        input, select, textarea { 
+            width: 100%; padding: 14px; margin-top: 5px; 
+            border: 1px solid #ccc; border-radius: 8px; font-size: 16px; /* 16px prevents iOS zoom */
+        }
+
+        .btn-save { 
+            background: #00b894; color: white; border: none; padding: 16px; 
+            border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; margin-top: 20px;
+        }
+
+        /* TABLE ADJUSTMENTS FOR MOBILE */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px 8px; border-bottom: 1px solid #eee; text-align: left; }
+        
+        .delete-btn { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 5px; }
+
+        .day-selector { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; 
+            background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 5px;
+        }
+        
+        .exit-link { 
+            display: block; text-align: center; margin-top: 20px; 
+            color: var(--danger); text-decoration: none; font-weight: bold; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="admin-lock-screen">
+        <div class="lock-box">
+            <h2>Admin Login</h2>
+            <input type="password" id="adminPassInput" placeholder="Enter Password">
+            <button class="btn-save" onclick="verifyAdminPass()">Unlock Panel</button>
+            <p id="error-msg" style="color:red; display:none; margin-top:10px;">Incorrect Password!</p>
+        </div>
+    </div>
+
+    <header>AMHS Management</header>
+
+    <nav id="mobile-nav">
+        <button class="nav-btn active" onclick="showSection('students-sec')">Students</button>
+        <button class="nav-btn" onclick="showSection('notice-sec')">Notices</button>
+        <button class="nav-btn" onclick="showSection('homework-sec')">Homework</button>
+        <button class="nav-btn" onclick="showSection('timetable-sec')">Timetable</button>
+    </nav>
+
+    <div class="main-content">
+        
+        <div id="students-sec" class="section active">
+            <div class="card">
+                <h3>Student List</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Name</th><th>Class</th><th>Action</th></tr></thead>
+                        <tbody id="studentBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="notice-sec" class="section">
+            <div class="card">
+                <h3>Post Notice</h3>
+                <input type="text" id="notice-title" placeholder="Notice Title">
+                <textarea id="notice-msg" placeholder="Write message here..." rows="4"></textarea>
+                <button class="btn-save" onclick="postNotice()">Publish Notice</button>
+            </div>
+            <div class="card">
+                <h3>History</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <tbody id="noticeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="homework-sec" class="section">
+            <div class="card">
+                <h3>Assign Homework</h3>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="hw-class" placeholder="Class">
+                    <input type="text" id="hw-section" placeholder="Sec">
+                </div>
+                <input type="text" id="hw-subject" placeholder="Subject">
+                <textarea id="hw-details" placeholder="Task details..." rows="3"></textarea>
+                <button class="btn-save" onclick="assignHomework()">Save Homework</button>
+            </div>
+        </div>
+
+        <div id="timetable-sec" class="section">
+            <div class="card">
+                <h3>Timetable Entry</h3>
+                <input type="number" id="tt-class" placeholder="Class">
+                <input type="text" id="tt-section" placeholder="Section">
+                <select id="tt-period">
+                    <option value="1">1st Period</option>
+                    <option value="2">2nd Period</option>
+                    <option value="3">3rd Period</option>
+                </select>
+                <input type="text" id="tt-teacher" placeholder="Teacher Name">
+                <input type="text" id="tt-subject" placeholder="Subject">
+                <label>Select Days:</label>
+                <div class="day-selector">
+                    <label><input type="checkbox" name="days" value="Monday"> Mon</label>
+                    <label><input type="checkbox" name="days" value="Tuesday"> Tue</label>
+                    <label><input type="checkbox" name="days" value="Wednesday"> Wed</label>
+                    <label><input type="checkbox" name="days" value="Thursday"> Thu</label>
+                    <label><input type="checkbox" name="days" value="Friday"> Fri</label>
+                    <label><input type="checkbox" name="days" value="Saturday"> Sat</label>
+                </div>
+                <button class="btn-save" onclick="saveTimetable()">Update Schedule</button>
+            </div>
+        </div>
+
+        <a href="main.html" class="exit-link">Logout & Exit</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, setDoc, addDoc, doc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+            authDomain: "amhs-e7f6d.firebaseapp.com",
+            projectId: "amhs-e7f6d",
+            storageBucket: "amhs-e7f6d.firebasestorage.app",
+            messagingSenderId: "226999110651",
+            appId: "1:226999110651:web:3746238cb0140f1897d95e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- GLOBAL WINDOW FUNCTIONS ---
+        window.verifyAdminPass = () => {
+            if(document.getElementById('adminPassInput').value === "admin@amhs") {
+                document.getElementById('admin-lock-screen').style.display = 'none';
+                loadStudents();
+            } else { document.getElementById('error-msg').style.display = 'block'; }
+        };
+
+        window.showSection = (id) => {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            
+            // Highlight active button
+            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.innerText.toLowerCase().includes(id.split('-')[0]));
+            if(btn) btn.classList.add('active');
+
+            if(id === 'students-sec') loadStudents();
+            if(id === 'notice-sec') loadAdminNotices();
+        };
+
+        // --- DATA LOADERS ---
+        async function loadStudents() {
+            const body = document.getElementById('studentBody');
+            body.innerHTML = "Loading...";
+            const snap = await getDocs(collection(db, "students"));
+            body.innerHTML = "";
+            snap.forEach(r => {
+                const d = r.data();
+                body.innerHTML += `<tr><td>${d.studentName}</td><td>${d.class}-${d.section}</td><td><button class="delete-btn" onclick="deleteDocItem('students','${r.id}',loadStudents)">Del</button></td></tr>`;
+            });
+        }
+
+        async function loadAdminNotices() {
+            const body = document.getElementById('noticeTableBody');
+            const q = query(collection(db, "notices"), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            body.innerHTML = "";
+            snap.forEach(r => {
+                const d = r.data();
+                body.innerHTML += `<tr><td><b>${d.title}</b></td><td><button class="delete-btn" onclick="deleteDocItem('notices','${r.id}',loadAdminNotices)">Delete</button></td></tr>`;
+            });
+        }
+
+        window.deleteDocItem = async (coll, id, callback) => {
+            if(confirm("Confirm Delete?")) {
+                await deleteDoc(doc(db, coll, id));
+                callback();
+            }
+        };
+
+        // --- ACTIONS ---
+        window.postNotice = async () => {
+            const title = document.getElementById('notice-title').value;
+            const msg = document.getElementById('notice-msg').value;
+            if(!title || !msg) return alert("Fill all fields");
+            await addDoc(collection(db, "notices"), { title, message: msg, timestamp: serverTimestamp() });
+            alert("Posted!"); loadAdminNotices();
+        };
+
+        window.assignHomework = async () => {
+            await addDoc(collection(db, "homeworks"), {
+                class: document.getElementById('hw-class').value,
+                section: document.getElementById('hw-section').value.toUpperCase(),
+                subject: document.getElementById('hw-subject').value,
+                details: document.getElementById('hw-details').value,
+                timestamp: serverTimestamp()
+            });
+            alert("Assigned!");
+        };
+
+        window.saveTimetable = async () => {
+            const days = [...document.querySelectorAll('input[name="days"]:checked')].map(c => c.value);
+            const p = document.getElementById('tt-period').value;
+            const cls = document.getElementById('tt-class').value;
+            const sec = document.getElementById('tt-section').value.toUpperCase();
+            for(const day of days) {
+                await setDoc(doc(db, "timetable", `${cls}${sec}-${day}-P${p}`), {
+                    class: cls, section: sec, day, period: p,
+                    teacher: document.getElementById('tt-teacher').value,
+                    subject: document.getElementById('tt-subject').value
+                });
+            }
+            alert("Timetable Updated!");
+        };
+    </script>
+</body>
+</html>

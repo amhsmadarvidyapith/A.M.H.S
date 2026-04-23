@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Inspiration - Mobile Optimized</title>
+    <style>
+        :root {
+            --navy: #1a2a6c;
+            --accent-blue: #4a90e2;
+            --text-gray: #555;
+            --bg-light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #dee2e6;
+            margin: 0;
+            padding: 15px; /* Reduced for mobile */
+            color: #333;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        /* SECTION 1 Styling */
+        .inspiration-card {
+            background: white; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 25px;
+            display: flex; flex-direction: column; /* Default to mobile stack */
+        }
+
+        .inspiration-header { 
+            background: var(--navy); color: white; 
+            padding: 15px 20px; text-align: center; 
+        }
+        
+        .inspiration-header h2 { margin: 0; font-size: 1.4rem; }
+
+        .image-col {
+            padding: 30px 20px; background: #f1f3f5;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .profile-img {
+            width: 180px; height: 230px; object-fit: cover;
+            border: 6px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            border-radius: 4px; background: #ccc;
+        }
+
+        .content-col { 
+            padding: 25px 20px; line-height: 1.6; 
+            text-align: left; /* Better for mobile readability than justify */
+        }
+
+        /* SECTION 2 Styling */
+        .chairman-section {
+            background: white; border-radius: 15px; padding: 25px 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05); border-top: 6px solid var(--accent-blue);
+        }
+
+        .chairman-flex { display: flex; flex-direction: column; gap: 20px; }
+
+        .chairman-photo-box {
+            width: 100%; max-width: 280px; margin: 0 auto;
+            border: 1px solid #ddd; padding: 8px; background: #fff; border-radius: 8px;
+        }
+
+        .chairman-photo-box img { width: 100%; border-radius: 4px; display: block; }
+
+        .chairman-text h1 { 
+            color: var(--navy); margin: 10px 0; font-size: 1.5rem; text-align: center; 
+        }
+
+        .quote-block {
+            background: #f8f9fa; border-radius: 12px; padding: 20px;
+            margin: 20px 0; font-style: italic; border-left: 4px solid var(--accent-blue);
+            font-size: 0.95rem;
+        }
+
+        .back-btn { 
+            display: block; width: fit-content; margin: 20px auto 0; 
+            text-decoration: none; color: var(--navy); font-weight: bold; 
+            padding: 10px 20px; border: 1px solid #ddd; border-radius: 5px;
+        }
+
+        /* Desktop Adjustments */
+        @media (min-width: 769px) {
+            body { padding: 40px 20px; }
+            .inspiration-card { flex-direction: row; }
+            .inspiration-header { text-align: left; padding: 20px 40px; }
+            .image-col { flex: 1; }
+            .content-col { flex: 2; padding: 40px; text-align: justify; }
+            .chairman-flex { flex-direction: row; align-items: flex-start; }
+            .chairman-photo-box { width: 250px; margin: 0; }
+            .chairman-text h1 { text-align: left; }
+            .back-btn { margin-left: 0; border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="inspiration-card">
+        <div class="inspiration-header">
+            <h2>Our Inspiration</h2>
+        </div>
+        <div class="image-col">
+            <img src="aditya_nath.jpg" alt="Late Aditya Nath" class="profile-img">
+            <div style="margin-top: 15px; text-align: center;">
+                <h3 style="margin: 0; color: var(--navy); font-size: 1.1rem;">ADITYANATH SIR</h3>
+                <span style="color: var(--accent-blue); font-weight: bold; font-size: 0.9rem;">Former Chairman</span>
+            </div>
+        </div>
+        <div class="content-col">
+            <p><strong>Aditya Nath</strong>, the former Chairman of Adwaita Mission group of Institutions, commanded the honour of translating the vision of Late Anand Shankar Madhavan into reality. Under his dynamic stewardship, the Vidyapith progressed leaps and bounds.</p>
+            <p>Late Aditya Nath served the society by opening up new avenues for children and youth. His disciplined life and indomitable will power will ever remain an illuminating inspiration for the whole Vidyapith family.</p>
+        </div>
+    </div>
+
+    <div class="chairman-section">
+        <div class="chairman-flex">
+            <div class="chairman-photo-box">
+                <img src="chairman.jpg" alt="Sri Aravindakshan Madambath">
+                <p style="text-align: center; margin: 10px 0 0 0; font-size: 14px; font-weight: bold;">
+                    Sri Aravindakshan Madambath<br>
+                    <small style="color: var(--accent-blue);">Chairman</small>
+                </p>
+            </div>
+            
+            <div class="chairman-text">
+                <h1>From Chairman's Desk</h1>
+                <p>AMHS is dedicated to the pursuit of academic excellence, encouraging students to become independent and perceptive thinkers.</p>
+                <p>We are committed to inculcating in all our students strong ethical values of integrity, respect and discipline.</p>
+            </div>
+        </div>
+
+        <div class="quote-block">
+            "In order to achieve these, AMHS follows a rigorous programme based upon the best educational practices."
+        </div>
+
+        <p>AMHS will be the foundation for a new generation of readers and innovators.</p>
+
+        <a href="main.html" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+</div>
+
+</body>
+</html>
