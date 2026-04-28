@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Manage Calendar</title>
+    <style>
+        :root { --primary: #1a2a6c; --danger: #b21f1f; --bg: #f0f2f5; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        
+        .admin-card { 
+            background: white; padding: 30px; border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; 
+        }
+        
+        h2 { color: var(--primary); text-align: center; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 14px; }
+        
+        input, select, textarea { 
+            width: 100%; padding: 12px; border: 2px solid #eee; 
+            border-radius: 10px; font-size: 15px; outline: none; transition: 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+        
+        .btn-save { 
+            width: 100%; padding: 15px; background: var(--primary); 
+            color: white; border: none; border-radius: 10px; 
+            font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        
+        .btn-save:hover { background: #2c3e50; transform: translateY(-2px); }
+        .btn-save:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .status { text-align: center; margin-top: 15px; padding: 10px; border-radius: 8px; display: none; }
+        .success { display: block; background: #e3fcef; color: #00b894; border: 1px solid #00b894; }
+        .nav-links { margin-top: 20px; text-align: center; }
+        .nav-links a { color: var(--primary); text-decoration: none; font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="admin-card">
+    <h2>Add Calendar Event</h2>
+    <form id="calendarForm">
+        <div class="form-group">
+            <label>Event Date</label>
+            <input type="date" id="eventDate" required>
+        </div>
+
+        <div class="form-group">
+            <label>Event Title</label>
+            <input type="text" id="eventTitle" placeholder="e.g. Science Fair" required>
+        </div>
+
+        <div class="form-group">
+            <label>Event Type</label>
+            <select id="eventType" required>
+                <option value="Event">General Event</option>
+                <option value="Competition">Competition (Allows Students to Join)</option>
+                <option value="Holiday">School Holiday</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="eventDesc" rows="3" placeholder="Brief details about the event..." required></textarea>
+        </div>
+
+        <button type="submit" id="saveBtn" class="btn-save">Add to Calendar</button>
+    </form>
+    
+    <div id="statusBox" class="status"></div>
+    
+    <div class="nav-links">
+        <a href="calendar.html">View Calendar Page →</a>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById('calendarForm');
+    const btn = document.getElementById('saveBtn');
+    const status = document.getElementById('statusBox');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        btn.disabled = true;
+        btn.innerText = "Publishing...";
+        status.style.display = "none";
+
+        const data = {
+            date: document.getElementById('eventDate').value,
+            title: document.getElementById('eventTitle').value,
+            type: document.getElementById('eventType').value,
+            description: document.getElementById('eventDesc').value,
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            await addDoc(collection(db, "school_calendar"), data);
+            
+            status.innerText = "Event published successfully!";
+            status.className = "status success";
+            form.reset();
+        } catch (error) {
+            console.error(error);
+            alert("Error saving event.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Add to Calendar";
+        }
+    });
+</script>
+
+</body>
+</html>

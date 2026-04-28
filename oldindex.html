@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMHS Portal - Student Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { 
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; margin: 0; 
+        }
+        .login-card { 
+            background: white; padding: 40px; border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; 
+            max-width: 420px; position: relative; animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .settings-link { position: absolute; top: 20px; right: 20px; color: #555; text-decoration: none; font-size: 20px; transition: 0.3s; }
+        .settings-link:hover { color: #000; transform: rotate(90deg); }
+        h2 { text-align: center; color: #333; margin-bottom: 30px; font-size: 26px; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 8px; color: #555; font-weight: 600; font-size: 14px; }
+        input, select { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; outline: none; }
+        input:focus { border-color: #4a90e2; }
+        button { 
+            width: 100%; padding: 15px; background: #4a90e2; color: white; 
+            border: none; border-radius: 10px; font-size: 18px; font-weight: bold; 
+            cursor: pointer; transition: 0.3s; margin-top: 15px; 
+        }
+        button:hover { background: #2c3e50; transform: translateY(-2px); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .footer-text { text-align: center; margin-top: 20px; font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <a href="admin.html" class="settings-link"><i class="fa-solid fa-gear"></i></a> 
+    <h2>Student Login</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <label>Admission Number</label>
+            <input type="number" id="admNo" placeholder="Enter Admission No" required>
+        </div>
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="name" placeholder="Enter Full Name" required>
+        </div>
+        <div class="form-group">
+            <label>Class</label>
+            <input type="number" id="class" placeholder="Enter Class" min="1" max="12" required>
+        </div>
+        <div class="form-group">
+            <label>Section</label>
+            <select id="section" required>
+                <option value="" disabled selected>Select Section</option>
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+                <option value="C">Section C</option>
+                <option value="D">Section D</option>
+                <option value="E">Section E</option>
+                <option value="F">Section F</option>
+                <option value="G">Section G</option>
+            </select>
+        </div>
+        <button type="submit" id="loginBtn">Login to Portal</button>
+    </form>
+    <p class="footer-text">Adwaita Mission High School</p>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // --- ENHANCED AUTO-LOGIN CHECK ---
+    // Only redirect if ALL necessary data exists
+    const storedStatus = localStorage.getItem("isLoggedIn");
+    const storedAdm = localStorage.getItem("admissionNo");
+
+    if (storedStatus === "true" && storedAdm) {
+        window.location.replace("main.html"); // Use replace to prevent back-button loops
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        loginBtn.disabled = true;
+        loginBtn.innerText = "Processing...";
+
+        // Collect and Clean Data
+        const adm = document.getElementById('admNo').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const cls = document.getElementById('class').value;
+        const sec = document.getElementById('section').value;
+
+        try {
+            // 1. Record Login to Firebase
+            await addDoc(collection(db, "students"), {
+                admissionNo: adm,
+                studentName: name,
+                class: cls,
+                section: sec,
+                loginTime: new Date().toLocaleString()
+            });
+
+            // 2. Save Session Data
+            localStorage.setItem("studentName", name);
+            localStorage.setItem("studentClass", cls);
+            localStorage.setItem("studentSection", sec);
+            localStorage.setItem("admissionNo", adm);
+            localStorage.setItem("isLoggedIn", "true");
+
+            // 3. Move to Dashboard
+            window.location.href = "main.html";
+
+        } catch (error) {
+            console.error("Login Error:", error);
+            alert("Connection failed. Please check your internet.");
+            loginBtn.disabled = false;
+            loginBtn.innerText = "Login to Portal";
+        }
+    });
+</script>
+</body>
+</html>

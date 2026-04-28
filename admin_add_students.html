@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register Student | AMHS</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .form-card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #1a2a6c; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        button:hover { background: #b21f1f; }
+    </style>
+</head>
+<body>
+
+<div class="form-card">
+    <h2 style="text-align:center; color:#1a2a6c;">Add New Student</h2>
+    
+    <input type="text" id="stuName" placeholder="Full Name">
+    <input type="text" id="admNo" placeholder="Admission Number (Unique ID)">
+    <input type="number" id="rollNo" placeholder="Roll Number">
+    
+    <select id="stuClass">
+        <option value="">Select Class</option>
+        <option value="Nursery">Nursery</option>
+        <option value="LKG">LKG</option>
+        <option value="UKG">UKG</option>
+        <script>for(let i=1; i<=12; i++) document.write(`<option value="${i}">Class ${i}</option>`);</script>
+    </select>
+
+    <select id="stuSection">
+        <option value="A">Section A</option>
+        <option value="B">Section B</option>
+        <option value="C">Section C</option>
+        <option value="D">Section D</option>
+        <option value="E">Section E</option>
+        <option value="F">Section F</option>
+        <option value="G">Section G</option>
+    </select>
+
+    <button onclick="registerStudent()">REGISTER STUDENT</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.registerStudent = async () => {
+        const name = document.getElementById('stuName').value;
+        const adm = document.getElementById('admNo').value;
+        const roll = parseInt(document.getElementById('rollNo').value);
+        const cls = document.getElementById('stuClass').value;
+        const sec = document.getElementById('stuSection').value;
+
+        if(!name || !adm || !roll || !cls) return alert("Fill all fields!");
+
+        try {
+            // Using Admission Number as the Document ID to prevent duplicates
+            await setDoc(doc(db, "students", adm), {
+                name: name,
+                admissionNo: adm,
+                rollNo: roll,
+                class: cls,
+                section: sec,
+                createdAt: new Date().getTime()
+            });
+            alert("Student Added Successfully!");
+            location.reload(); 
+        } catch (e) {
+            alert("Error adding student: " + e.message);
+        }
+    }
+</script>
+</body>
+</html>

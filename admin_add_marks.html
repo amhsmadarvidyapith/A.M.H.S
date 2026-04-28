@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Add Marks</title>
+    <style>
+        :root { --primary: #1a2a6c; --accent: #4a90e2; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .admin-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: var(--primary); text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #444; }
+        input { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--accent); }
+        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-submit:hover { background: #2c3e50; }
+        .status-msg { text-align: center; margin-top: 15px; padding: 12px; border-radius: 8px; display: none; font-weight: 600; }
+        .success { display: block; background: #e3fcef; color: #00b894; border: 1px solid #00b894; }
+    </style>
+</head>
+<body>
+
+<div class="admin-card">
+    <h2>Data Entry</h2>
+    <form id="marksForm">
+        <div class="form-group">
+            <label>Admission Number</label>
+            <input type="number" id="admNo" required>
+        </div>
+        <div class="form-group">
+            <label>Subject Name</label>
+            <input type="text" id="subject" placeholder="e.g. Science" required>
+        </div>
+        <div class="form-group">
+            <label>Exam Name</label>
+            <input type="text" id="examName" placeholder="e.g. Unit Test 1" required>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+                <label>Marks</label>
+                <input type="number" id="marks" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>Total</label>
+                <input type="number" id="totalMarks" value="100" required>
+            </div>
+        </div>
+        <button type="submit" id="submitBtn" class="btn-submit">Upload Marks</button>
+    </form>
+    <div id="status" class="status-msg"></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    document.getElementById('marksForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const status = document.getElementById('status');
+        
+        btn.disabled = true;
+        btn.innerText = "Saving...";
+
+        try {
+            await addDoc(collection(db, "test_marks"), {
+                admissionNo: Number(document.getElementById('admNo').value),
+                subject: document.getElementById('subject').value,
+                examName: document.getElementById('examName').value,
+                marks: Number(document.getElementById('marks').value),
+                totalMarks: Number(document.getElementById('totalMarks').value),
+                timestamp: Date.now() // For sorting latest first
+            });
+
+            status.innerText = "Marks Saved Successfully!";
+            status.className = "status-msg success";
+            e.target.reset();
+            document.getElementById('totalMarks').value = 100;
+        } catch (err) {
+            alert("Error saving data");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Upload Marks";
+        }
+    });
+</script>
+</body>
+</html>

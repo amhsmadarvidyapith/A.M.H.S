@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adwaita Mission </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        // Persist Dark Mode preference
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    <style>
+        /* Smooth transitions for theme switching */
+        body { transition: background-color 0.3s, color 0.3s; }
+        #chatWindow::-webkit-scrollbar { width: 5px; }
+        #chatWindow::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .user-bubble { @apply bg-blue-700 text-white border-none rounded-2xl rounded-tr-none shadow-md; }
+        .ai-bubble { @apply bg-white dark:bg-[#1E1E1E] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-none shadow-sm; }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-[#121212]">
+
+    <header class="bg-blue-800 dark:bg-slate-900 p-4 text-white flex justify-between items-center shadow-lg z-20">
+        <div class="flex flex-col">
+            <h1 class="text-sm md:text-lg font-bold tracking-tight">ADWAITA MISSION HIGH SCHOOL</h1>
+    
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-white/20 transition-all" title="Toggle Dark Mode">
+                <span id="theme-icon" class="text-lg">🌙</span>
+            </button>
+            <button onclick="startNewChat()" class="text-xs bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg transition-all flex items-center gap-2 font-medium">
+                New Chat
+            </button>
+        </div>
+    </header>
+
+    <main id="chatWindow" class="flex-1 overflow-y-auto p-4 md:p-10 space-y-6">
+        <div id="welcomeState" class="h-full flex flex-col items-center justify-center text-center opacity-60 mt-20 dark:text-slate-400">
+    
+            <h2 class="text-2xl font-light italic text-slate-800 dark:text-slate-200">"Every man is potentially divine"</h2>
+            <p class="mt-2 text-sm">How can I assist your studies at the Bounsi campus today?</p>
+        </div>
+    </main>
+
+    <footer class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+        <div class="max-w-4xl mx-auto flex flex-col gap-2">
+            
+            <div id="filePreview" class="hidden flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-xs dark:text-blue-200 border border-blue-100 dark:border-blue-800">
+                <span id="fileName" class="truncate max-w-[200px] font-medium"></span>
+                <button onclick="clearFile()" class="text-red-500 hover:bg-red-50 p-1 rounded-full ml-auto">✕</button>
+            </div>
+            
+            <div class="flex items-center gap-2 w-full">
+                <label class="flex-shrink-0 cursor-pointer bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-slate-600 dark:text-slate-400">
+                    <input type="file" id="fileInput" class="hidden" accept="image/*,application/pdf" onchange="handleFile(this)">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                </label>
+                
+                <input type="text" id="userInput" 
+                    class="flex-1 min-w-0 bg-slate-50 dark:bg-slate-800 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-blue-600 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-100 placeholder:text-slate-400 shadow-inner"
+                    placeholder="Ask a question ..."
+                    onkeypress="if(event.key === 'Enter') sendMessage()">
+                
+                <button onclick="sendMessage()" class="flex-shrink-0 bg-blue-700 hover:bg-blue-800 text-white p-4 rounded-2xl shadow-lg transition-all active:scale-95">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="text-[10px] text-center text-slate-400 mt-3 font-medium">Bounsi, Banka, Bihar</div>
+    </footer>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        // Replace with your API Key
+        const API_KEY = "AIzaSyCAzhT5Yaa6NJNw2R2RpKl43OAfN0Ale3c";
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const MODEL_ID = "gemini-1.5-flash"; // Use "gemini-1.5-flash" or "gemini-pro-vision"
+
+        let chatSession = null;
+        let selectedFile = null;
+
+        // --- THEME LOGIC ---
+        window.toggleDarkMode = () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+        };
+        // Set initial icon
+        if (document.documentElement.classList.contains('dark')) {
+            document.getElementById('theme-icon').innerText = '☀️';
+        }
+
+        // --- FILE HANDLING ---
+        window.handleFile = (input) => {
+            if (input.files && input.files) {
+                const file = input.files;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    selectedFile = {
+                        inlineData: {
+                            data: e.target.result.split(','),
+                            mimeType: file.type
+                        }
+                    };
+                    document.getElementById('filePreview').classList.remove('hidden');
+                    document.getElementById('fileName').innerText = `📎 ${file.name}`;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.clearFile = () => {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('filePreview').classList.add('hidden');
+        };
+
+        // --- CHAT LOGIC ---
+        window.startNewChat = () => {
+            document.getElementById('chatWindow').innerHTML = `<p class="mt-2">New chat started. How can I assist you?</p></div>`;
+            const model = genAI.getGenerativeModel({ 
+                model: MODEL_ID,
+                systemInstruction: "You are the AI Study Assistant for Adwaita Mission High School, Bounsi. Help students with CBSE subjects, morality, and general knowledge. Use simple English."
+            });
+            chatSession = model.startChat({ history: [] });
+            clearFile();
+        };
+
+        window.sendMessage = async function() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text && !selectedFile) return;
+
+            const welcome = document.getElementById('welcomeState');
+            if(welcome) welcome.remove();
+
+            addBubble('user', text || "Shared a file");
+            input.value = "";
+
+            const loadingId = "ai-" + Date.now();
+            addBubble('model', "Thinking...", loadingId);
+
+            try {
+                if (!chatSession) startNewChat();
+                
+                let request;
+                if (selectedFile) {
+                    request = [text || "Analyze this file", selectedFile];
+                } else {
+                    request = text;
+                }
+
+                const result = await chatSession.sendMessage(request);
+                const aiResponse = result.response.text();
+                
+                document.getElementById(loadingId).innerHTML = marked.parse(aiResponse);
+                clearFile();
+            } catch (err) {
+                document.getElementById(loadingId).innerText = "The connection failed. Please check your internet or file size.";
+            }
+        };
+
+        function addBubble(role, text, id = null) {
+            const window = document.getElementById('chatWindow');
+            const div = document.createElement('div');
+            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+            const bubble = document.createElement('div');
+            bubble.id = id;
+            bubble.className = `max-w-[85%] p-4 ${role === 'user' ? 'user-bubble' : 'ai-bubble'}`;
+            bubble.innerHTML = role === 'model' && id === null ? marked.parse(text) : text;
+            div.appendChild(bubble);
+            window.appendChild(div);
+            window.scrollTop = window.scrollHeight;
+        }
+
+        // Run on Startup
+        startNewChat();
+    </script>
+</body>
+</html>

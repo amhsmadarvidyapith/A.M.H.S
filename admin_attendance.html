@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMHS | Teacher Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #1a2a6c; --success: #27ae60; --danger: #b21f1f; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        label { display: block; font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; background: white; }
+        .attendance-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .attendance-table th { background: var(--primary); color: white; padding: 12px; text-align: left; }
+        .attendance-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .status-btn { padding: 10px; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; width: 110px; transition: 0.3s; }
+        .present { background: #d4edda; color: #155724; border: 2px solid #c3e6cb; }
+        .absent { background: #f8d7da; color: #721c24; border: 2px solid #f5c6cb; }
+        .submit-btn { display: block; width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2><i class="fa-solid fa-clipboard-user"></i> Mark Attendance</h2>
+    </div>
+    
+    <div class="controls">
+        <div>
+            <label>Date</label>
+            <input type="date" id="attendanceDate">
+        </div>
+        <div>
+            <label>Class</label>
+            <select id="classFilter">
+                <option value="">-- Class --</option>
+                <option value="Nursery">Nursery</option>
+                <option value="LKG">LKG</option>
+                <option value="UKG">UKG</option>
+                <script>for(let i=1; i<=12; i++) document.write(`<option value="${i}">Class ${i}</option>`);</script>
+            </select>
+        </div>
+        <div>
+            <label>Section</label>
+            <select id="sectionFilter">
+                <script>
+                    ['A','B','C','D','E','F','G'].forEach(s => document.write(`<option value="${s}">Section ${s}</option>`));
+                </script>
+            </select>
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+            <button onclick="fetchStudents()" style="width:100%; background: var(--primary); color:white; border:none; padding:11px; border-radius:8px; cursor:pointer; font-weight:bold;">LOAD LIST</button>
+        </div>
+    </div>
+
+    <table class="attendance-table">
+        <thead>
+            <tr><th>Roll</th><th>Student Name</th><th style="text-align:center;">Status</th></tr>
+        </thead>
+        <tbody id="studentList">
+            <tr><td colspan="3" style="text-align:center; padding:30px; color:#777;">Select class & section to begin.</td></tr>
+        </tbody>
+    </table>
+
+    <button id="saveBtn" class="submit-btn" onclick="saveAttendance()" style="display:none;">SUBMIT & NOTIFY</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where, addDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    document.getElementById('attendanceDate').valueAsDate = new Date();
+
+    window.fetchStudents = async () => {
+        const classVal = document.getElementById('classFilter').value;
+        const sectionVal = document.getElementById('sectionFilter').value;
+        if(!classVal) return alert("Select Class");
+
+        const listBody = document.getElementById('studentList');
+        listBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Searching...</td></tr>";
+
+        try {
+            const q = query(collection(db, "students"), where("class", "==", classVal), where("section", "==", sectionVal), orderBy("rollNo", "asc"));
+            const snap = await getDocs(q);
+            listBody.innerHTML = "";
+            if(snap.empty) { listBody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No students found.</td></tr>"; return; }
+
+            snap.forEach(doc => {
+                const data = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${data.rollNo}</td><td>${data.name}</td><td style="text-align:center;"><button class="status-btn present" onclick="toggleStatus(this)" data-adm="${data.admissionNo}" data-name="${data.name}">PRESENT</button></td>`;
+                listBody.appendChild(row);
+            });
+            document.getElementById('saveBtn').style.display = 'block';
+        } catch (e) { alert("Index Required! Open F12 Console for link."); }
+    }
+
+    window.toggleStatus = (btn) => {
+        const isP = btn.innerText === "PRESENT";
+        btn.innerText = isP ? "ABSENT" : "PRESENT";
+        btn.className = isP ? "status-btn absent" : "status-btn present";
+    }
+
+    window.saveAttendance = async () => {
+        const date = document.getElementById('attendanceDate').value;
+        const classVal = document.getElementById('classFilter').value;
+        const sectionVal = document.getElementById('sectionFilter').value;
+        const rows = document.querySelectorAll('.status-btn');
+        const saveBtn = document.getElementById('saveBtn');
+
+        if(!confirm("Submit attendance and notify students?")) return;
+        saveBtn.disabled = true; saveBtn.innerText = "SENDING NOTICES...";
+
+        try {
+            for (let btn of rows) {
+                const adm = btn.getAttribute('data-adm');
+                const name = btn.getAttribute('data-name');
+                const status = btn.innerText;
+
+                // Log entry
+                await addDoc(collection(db, "attendance_logs"), { date, className: classVal, section: sectionVal, studentName: name, admissionNo: adm, status, timestamp: new Date().getTime() });
+                
+                // Real-time Notice
+                await addDoc(collection(db, "student_notices"), { targetAdmissionNo: adm, message: `Attendance Update: You were marked ${status} for ${date}.`, type: status === 'PRESENT' ? 'success' : 'danger', timestamp: new Date().getTime() });
+            }
+            alert("All students notified!"); location.reload();
+        } catch (e) { alert("Error saving."); saveBtn.disabled = false; }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<div style="max-width: 800px; margin: 20px auto; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+    
+    <button onclick="window.location.href='admin_calendar.html'" 
+        style="background: #1a2a6c; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+        <i class="fa-solid fa-calendar-plus"></i> Add Events
+    </button>
+
+    <button onclick="window.location.href='admin_view_participants.html'" 
+        style="background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+        <i class="fa-solid fa-users"></i> View Participants
+    </button>
+
+    <button onclick="window.open('https://console.firebase.google.com/project/amhs-e7f6d/firestore/data', '_blank')" 
+        style="background: #b21f1f; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+        <i class="fa-solid fa-trash-can"></i> Reset Session (Firebase)
+    </button>
+
+</div>
+
+<hr style="max-width: 800px; border: 0; border-top: 1px solid #ddd; margin: 20px auto;">

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Tracker</title>
+    <style>
+        :root { --success: #00b894; --danger: #ff7675; --dark: #1a2a6c; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f4f7f6; padding: 15px; margin: 0; }
+        .header { background: var(--dark); color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .subject-row { margin-bottom: 15px; }
+        .subject-info { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 5px; }
+        .exam-tag { font-weight: normal; font-size: 12px; opacity: 0.6; margin-left: 5px; }
+        .bar-bg { background: #eee; height: 12px; border-radius: 10px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0; transition: width 1s ease-in-out; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2 style="margin:0;">Progress Tracker</h2>
+    <p id="studentDisplay" style="opacity: 0.8; margin: 5px 0 0 0;"></p>
+</div>
+
+<div class="card">
+    <div id="marksList">Loading marks...</div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const sAdm = localStorage.getItem("admissionNo");
+    const sName = localStorage.getItem("studentName");
+
+    if (!sAdm) { window.location.href = "index.html"; }
+    else {
+        document.getElementById('studentDisplay').innerText = `${sName} (${sAdm})`;
+        loadProgress();
+    }
+
+    async function loadProgress() {
+        const list = document.getElementById('marksList');
+        try {
+            const q = query(
+                collection(db, "test_marks"), 
+                where("admissionNo", "==", Number(sAdm)),
+                orderBy("timestamp", "desc")
+            );
+            
+            const snap = await getDocs(q);
+            if(snap.empty) { list.innerHTML = "No marks found."; return; }
+
+            let html = "";
+            let results = [];
+
+            snap.forEach(doc => {
+                const d = doc.data();
+                const pct = (d.marks / d.totalMarks) * 100;
+                results.push({ id: doc.id, ...d, pct });
+
+                html += `
+                <div class="subject-row">
+                    <div class="subject-info">
+                        <span>${d.subject} <span class="exam-tag">(${d.examName})</span></span>
+                        <span>${d.marks}/${d.totalMarks}</span>
+                    </div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" id="bar-${doc.id}" style="background:${pct > 40 ? 'var(--success)' : 'var(--danger)'}"></div>
+                    </div>
+                </div>`;
+            });
+
+            list.innerHTML = html;
+            setTimeout(() => {
+                results.forEach(r => document.getElementById(`bar-${r.id}`).style.width = r.pct + "%");
+            }, 100);
+
+        } catch (e) {
+            console.error(e);
+            list.innerHTML = "Error loading. You may need to create an index in Firebase console (check browser console for link).";
+        }
+    }
+</script>
+</body>
+</html>

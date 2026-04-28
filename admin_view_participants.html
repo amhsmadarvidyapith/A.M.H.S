@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Event Participants</title>
+    <style>
+        :root { --primary: #1a2a6c; --danger: #b21f1f; --accent: #4a90e2; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f4f7f6; padding: 20px; }
+
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .header { border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        h2 { margin: 0 0 15px 0; color: var(--primary); text-align: center; }
+
+        /* Filter Section Styles */
+        .controls { 
+            display: flex; gap: 15px; flex-wrap: wrap; 
+            background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;
+            align-items: center; justify-content: space-between;
+        }
+        .filter-group { display: flex; align-items: center; gap: 10px; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #ccc; outline: none; min-width: 200px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #1a2a6c; color: white; }
+        
+        .event-badge { background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 5px; font-weight: bold; font-size: 11px; }
+        .delete-btn { color: var(--danger); border: none; background: none; cursor: pointer; font-weight: bold; }
+        .print-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        @media print { .controls, .delete-btn { display: none; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Event Participation Records</h2>
+    </div>
+
+    <div class="controls">
+        <div class="filter-group">
+            <label><b>Filter by Competition:</b></label>
+            <select id="eventFilter" onchange="filterData()">
+                <option value="all">Show All Participants</option>
+            </select>
+        </div>
+        <button class="print-btn" onclick="window.print()">Print This List</button>
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 20px;">Fetching records...</div>
+    
+    <table id="participantTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Student Details</th>
+                <th>Class/Sec</th>
+                <th>Roll No</th>
+                <th>Contact</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="pList"></tbody>
+    </table>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let masterData = []; // To store all records for filtering
+
+    async function loadParticipants() {
+        const listBody = document.getElementById('pList');
+        const filterSelect = document.getElementById('eventFilter');
+
+        try {
+            const q = query(collection(db, "event_participations"), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            
+            masterData = [];
+            let uniqueEvents = new Set();
+
+            snap.forEach(documentSnapshot => {
+                const data = { id: documentSnapshot.id, ...documentSnapshot.data() };
+                masterData.push(data);
+                uniqueEvents.add(data.eventName);
+            });
+
+            // Populate Filter Dropdown
+            filterSelect.innerHTML = '<option value="all">Show All Participants</option>';
+            uniqueEvents.forEach(event => {
+                const opt = document.createElement('option');
+                opt.value = event;
+                opt.innerText = event;
+                filterSelect.appendChild(opt);
+            });
+
+            renderTable(masterData);
+            document.getElementById('loading').style.display = "none";
+            document.getElementById('participantTable').style.display = "table";
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('loading').innerText = "Error loading data.";
+        }
+    }
+
+    function renderTable(dataArray) {
+        const listBody = document.getElementById('pList');
+        let html = "";
+        
+        dataArray.forEach(d => {
+            html += `
+                <tr>
+                    <td><span class="event-badge">${d.eventName}</span></td>
+                    <td><b>${d.studentName}</b><br><small>ID: ${d.admissionNo}</small></td>
+                    <td>${d.class} - ${d.section}</td>
+                    <td>${d.rollNo}</td>
+                    <td>${d.contact}</td>
+                    <td><button class="delete-btn" onclick="deleteEntry('${d.id}')">Delete</button></td>
+                </tr>
+            `;
+        });
+
+        listBody.innerHTML = html || "<tr><td colspan='6' style='text-align:center;'>No records found for this selection.</td></tr>";
+    }
+
+    // Window functions for interactivity
+    window.filterData = () => {
+        const selectedValue = document.getElementById('eventFilter').value;
+        if(selectedValue === "all") {
+            renderTable(masterData);
+        } else {
+            const filtered = masterData.filter(item => item.eventName === selectedValue);
+            renderTable(filtered);
+        }
+    };
+
+    window.deleteEntry = async (id) => {
+        if(confirm("Permanently remove this participant?")) {
+            try {
+                await deleteDoc(doc(db, "event_participations", id));
+                loadParticipants(); 
+            } catch (err) { alert("Delete failed."); }
+        }
+    };
+
+    window.onload = loadParticipants;
+</script>
+</body>
+</html>
