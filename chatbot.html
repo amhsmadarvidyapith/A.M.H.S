@@ -75,112 +75,114 @@
     </footer>
 
     <script type="module">
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-        // Replace with your API Key
-        const API_KEY = "AIzaSyCAzhT5Yaa6NJNw2R2RpKl43OAfN0Ale3c";
-        const genAI = new GoogleGenerativeAI(API_KEY);
-        const MODEL_ID = "gemini-1.5-flash"; // Use "gemini-1.5-flash" or "gemini-pro-vision"
+    const API_KEY = "AIzaSyCAzhT5Yaa6NJNw2R2RpKl43OAfN0Ale3c"; // Replace with your actual key
+    const genAI = new GoogleGenerativeAI(API_KEY);
+    const MODEL_ID = "gemini-1.5-flash"; 
 
-        let chatSession = null;
-        let selectedFile = null;
+    let chatSession = null;
+    let selectedFile = null;
 
-        // --- THEME LOGIC ---
-        window.toggleDarkMode = () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
-            document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
-        };
-        // Set initial icon
-        if (document.documentElement.classList.contains('dark')) {
-            document.getElementById('theme-icon').innerText = '☀️';
-        }
+    // --- THEME LOGIC ---
+    window.toggleDarkMode = () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
+        document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+    };
 
-        // --- FILE HANDLING ---
-        window.handleFile = (input) => {
-            if (input.files && input.files) {
-                const file = input.files;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    selectedFile = {
-                        inlineData: {
-                            data: e.target.result.split(','),
-                            mimeType: file.type
-                        }
-                    };
-                    document.getElementById('filePreview').classList.remove('hidden');
-                    document.getElementById('fileName').innerText = `📎 ${file.name}`;
+    // --- FILE HANDLING ---
+    window.handleFile = (input) => {
+        if (input.files && input.files[0]) {
+            const file = input.files[0]; // Fix: Get the first file in the list
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedFile = {
+                    inlineData: {
+                        // Fix: Take only the Base64 string part after the comma
+                        data: e.target.result.split(',')[1], 
+                        mimeType: file.type
+                    }
                 };
-                reader.readAsDataURL(file);
-            }
-        };
-
-        window.clearFile = () => {
-            selectedFile = null;
-            document.getElementById('fileInput').value = '';
-            document.getElementById('filePreview').classList.add('hidden');
-        };
-
-        // --- CHAT LOGIC ---
-        window.startNewChat = () => {
-            document.getElementById('chatWindow').innerHTML = `<p class="mt-2">New chat started. How can I assist you?</p></div>`;
-            const model = genAI.getGenerativeModel({ 
-                model: MODEL_ID,
-                systemInstruction: "You are the AI Study Assistant for Adwaita Mission High School, Bounsi. Help students with CBSE subjects, morality, and general knowledge. Use simple English."
-            });
-            chatSession = model.startChat({ history: [] });
-            clearFile();
-        };
-
-        window.sendMessage = async function() {
-            const input = document.getElementById('userInput');
-            const text = input.value.trim();
-            if (!text && !selectedFile) return;
-
-            const welcome = document.getElementById('welcomeState');
-            if(welcome) welcome.remove();
-
-            addBubble('user', text || "Shared a file");
-            input.value = "";
-
-            const loadingId = "ai-" + Date.now();
-            addBubble('model', "Thinking...", loadingId);
-
-            try {
-                if (!chatSession) startNewChat();
-                
-                let request;
-                if (selectedFile) {
-                    request = [text || "Analyze this file", selectedFile];
-                } else {
-                    request = text;
-                }
-
-                const result = await chatSession.sendMessage(request);
-                const aiResponse = result.response.text();
-                
-                document.getElementById(loadingId).innerHTML = marked.parse(aiResponse);
-                clearFile();
-            } catch (err) {
-                document.getElementById(loadingId).innerText = "The connection failed. Please check your internet or file size.";
-            }
-        };
-
-        function addBubble(role, text, id = null) {
-            const window = document.getElementById('chatWindow');
-            const div = document.createElement('div');
-            div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-            const bubble = document.createElement('div');
-            bubble.id = id;
-            bubble.className = `max-w-[85%] p-4 ${role === 'user' ? 'user-bubble' : 'ai-bubble'}`;
-            bubble.innerHTML = role === 'model' && id === null ? marked.parse(text) : text;
-            div.appendChild(bubble);
-            window.appendChild(div);
-            window.scrollTop = window.scrollHeight;
+                document.getElementById('filePreview').classList.remove('hidden');
+                document.getElementById('fileName').innerText = `📎 ${file.name}`;
+            };
+            reader.readAsDataURL(file);
         }
+    };
 
-        // Run on Startup
-        startNewChat();
+    window.clearFile = () => {
+        selectedFile = null;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('filePreview').classList.add('hidden');
+    };
+
+    // --- CHAT LOGIC ---
+    window.startNewChat = () => {
+        const chatWindow = document.getElementById('chatWindow');
+        chatWindow.innerHTML = `
+            <div id="welcomeState" class="h-full flex flex-col items-center justify-center text-center opacity-60 mt-20 dark:text-slate-400">
+                <h2 class="text-2xl font-light italic text-slate-800 dark:text-slate-200">"Every man is potentially divine"</h2>
+                <p class="mt-2 text-sm">How can I assist your studies at the Bounsi campus today?</p>
+            </div>`;
+        
+        const model = genAI.getGenerativeModel({ 
+            model: MODEL_ID,
+            systemInstruction: "You are the AI Study Assistant for Adwaita Mission High School, Bounsi. Help students with CBSE subjects, morality, and general knowledge. Use simple English."
+        });
+        chatSession = model.startChat({ history: [] });
+        clearFile();
+    };
+
+    window.sendMessage = async function() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text && !selectedFile) return;
+
+        const welcome = document.getElementById('welcomeState');
+        if(welcome) welcome.remove();
+
+        addBubble('user', text || "Shared a file");
+        input.value = "";
+
+        const loadingId = "ai-" + Date.now();
+        addBubble('model', "Thinking...", loadingId);
+
+        try {
+            if (!chatSession) startNewChat();
+            
+            let result;
+            if (selectedFile) {
+                // If there's a file, we send an array [text, file]
+                result = await chatSession.sendMessage([text || "Please analyze this.", selectedFile]);
+            } else {
+                result = await chatSession.sendMessage(text);
+            }
+
+            const aiResponse = await result.response.text();
+            document.getElementById(loadingId).innerHTML = marked.parse(aiResponse);
+            clearFile();
+        } catch (err) {
+            console.error(err); // This helps you see the real error in Browser Console (F12)
+            document.getElementById(loadingId).innerText = "The connection failed. Please check your API key or internet.";
+        }
+    };
+
+    function addBubble(role, text, id = null) {
+        const window = document.getElementById('chatWindow');
+        const div = document.createElement('div');
+        div.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+        const bubble = document.createElement('div');
+        if(id) bubble.id = id;
+        bubble.className = `max-w-[85%] p-4 ${role === 'user' ? 'user-bubble' : 'ai-bubble'}`;
+        bubble.innerHTML = role === 'model' && id === null ? marked.parse(text) : text;
+        div.appendChild(bubble);
+        window.appendChild(div);
+        window.scrollTop = window.scrollHeight;
+    }
+
+    startNewChat();
     </script>
+    
 </body>
 </html>
