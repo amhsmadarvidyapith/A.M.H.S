@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adwaita Mission - Student Promotion</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .promotion-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+        h2 { color: #1a73e8; margin-top: 0; border-bottom: 2px solid #e8f0fe; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; color: #5f6368; }
+        input { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input:focus { outline: none; border-color: #1a73e8; background: #f8f9fa; }
+        input[readonly] { background: #f1f3f4; color: #70757a; cursor: not-allowed; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn-search { background: #1a73e8; color: white; }
+        .btn-update { background: #34a853; color: white; display: none; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        .hidden-fields { display: none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="promotion-card">
+    <h2>Promote Student</h2>
+    
+    <div class="form-group">
+        <label>Admission No.</label>
+        <input type="text" id="inputAdNo" placeholder="Enter Admission Number">
+        <button class="btn-search" id="searchBtn">Fetch Details</button>
+    </div>
+
+    <div id="resultArea" class="hidden-fields">
+        <div class="form-group">
+            <label>Student Name</label>
+            <input type="text" id="resName" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Promoting to Class</label>
+            <input type="text" id="resClass" readonly>
+        </div>
+
+        <div class="form-group">
+            <label>Assign Section</label>
+            <input type="text" id="resSection" placeholder="e.g. A, B, or C">
+        </div>
+
+        <div class="form-group">
+            <label>Assign Roll No.</label>
+            <input type="number" id="resRoll" placeholder="New Roll Number">
+        </div>
+
+        <button class="btn-update" id="updateBtn">Update Record & Promote</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Your provided credentials
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const searchBtn = document.getElementById('searchBtn');
+    const updateBtn = document.getElementById('updateBtn');
+    const resultArea = document.getElementById('resultArea');
+
+    // SEARCH LOGIC
+    searchBtn.addEventListener('click', async () => {
+        const adNo = document.getElementById('inputAdNo').value.trim();
+        if(!adNo) return alert("Please enter an Admission No.");
+
+        try {
+            // Locates the student document using the Admission No as the ID
+            const docRef = doc(db, "students", adNo);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                // Show fields
+                resultArea.style.display = 'block';
+                updateBtn.style.display = 'block';
+
+                // Fill data
+                document.getElementById('resName').value = data.name;
+                
+                // Increment Class Logic
+                let currentClass = parseInt(data.class);
+                document.getElementById('resClass').value = isNaN(currentClass) ? data.class : (currentClass + 1);
+                
+                // Prepare section/roll for editing
+                document.getElementById('resSection').value = data.section || "";
+                document.getElementById('resRoll').value = ""; 
+
+            } else {
+                alert("No student found with this Admission Number.");
+                resultArea.style.display = 'none';
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error fetching data. Check your database permissions.");
+        }
+    });
+
+    // UPDATE LOGIC
+    updateBtn.addEventListener('click', async () => {
+        const adNo = document.getElementById('inputAdNo').value.trim();
+        const nextClass = document.getElementById('resClass').value;
+        const nextSection = document.getElementById('resSection').value;
+        const nextRoll = document.getElementById('resRoll').value;
+
+        if(!nextSection || !nextRoll) return alert("Please fill Section and Roll No.");
+
+        try {
+            const docRef = doc(db, "students", adNo);
+            await updateDoc(docRef, {
+                class: nextClass,
+                section: nextSection,
+                roll: nextRoll
+            });
+
+            alert("Student promoted successfully to Class " + nextClass);
+            location.reload(); 
+        } catch (e) {
+            alert("Update failed: " + e.message);
+        }
+    });
+</script>
+
+</body>
+</html>
