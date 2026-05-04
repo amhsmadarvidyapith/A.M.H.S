@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Bulk Marks Entry</title>
+    <style>
+        :root { --primary: #1a2a6c; --accent: #4a90e2; --success: #00b894; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { background: #f0f2f5; padding: 20px; margin: 0; color: #333; }
+        .admin-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 900px; 
+            margin: auto; 
+        }
+
+        h2 { color: var(--primary); text-align: center; margin-bottom: 25px; }
+
+        /* Top Bar: Subject & Exam Info */
+        .header-inputs { 
+            display: grid; 
+            grid-template-columns: 2fr 2fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 10px;
+            border-left: 5px solid var(--primary);
+        }
+
+        /* Selection Bar: Class & Section */
+        .selection-bar { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 25px; 
+            align-items: flex-end; 
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+        }
+
+        .form-group { flex: 1; display: flex; flex-direction: column; }
+        label { margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #555; }
+        
+        input, select { 
+            padding: 12px; 
+            border: 2px solid #e1e1e1; 
+            border-radius: 8px; 
+            outline: none; 
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        input:focus, select:focus { border-color: var(--accent); }
+
+        /* Table Styling */
+        .table-container { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { text-align: left; background: #f4f7f6; padding: 15px; font-size: 14px; color: var(--primary); }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; }
+        
+        .mark-input { 
+            width: 100px; 
+            padding: 8px; 
+            border: 2px solid #ddd; 
+            border-radius: 5px; 
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Buttons */
+        .btn-fetch { 
+            padding: 0 25px; 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            height: 45px;
+            transition: 0.3s;
+        }
+        .btn-fetch:hover { background: #357abd; }
+
+        .btn-submit { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 25px; 
+            display: none;
+        }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+
+        .status-msg { 
+            text-align: center; 
+            margin-top: 15px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            display: none; 
+            font-weight: 600; 
+        }
+        .success { display: block; background: #e3fcef; color: var(--success); border: 1px solid var(--success); }
+        .info-text { font-size: 12px; color: #777; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="admin-card">
+    <h2>Academic Data Entry</h2>
+    
+    <div class="header-inputs">
+        <div class="form-group">
+            <label>Subject Name</label>
+            <input type="text" id="subject" placeholder="e.g. Science" required>
+        </div>
+        <div class="form-group">
+            <label>Exam Name</label>
+            <input type="text" id="examName" placeholder="e.g. Mid-Term" required>
+        </div>
+        <div class="form-group">
+            <label>Total Marks</label>
+            <input type="number" id="totalMarks" value="100">
+        </div>
+    </div>
+
+    <div class="selection-bar">
+        <div class="form-group">
+            <label>Class</label>
+            <select id="classSelect">
+                <option value="Nursery">Nursery</option>
+                <option value="LKG">LKG</option>
+                <option value="UKG">UKG</option>
+                <option value="1">Class 1</option>
+                <option value="2">Class 2</option>
+                <option value="3">Class 3</option>
+                <option value="4">Class 4</option>
+                <option value="5">Class 5</option>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+                <option value="11">Class 11</option>
+                <option value="12">Class 12</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Section</label>
+            <select id="sectionSelect">
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+                <option value="C">Section C</option>
+                <option value="D">Section D</option>
+                <option value="E">Section E</option>
+                <option value="F">Section F</option>
+                <option value="G">Section G</option>
+            </select>
+        </div>
+        <button type="button" id="fetchBtn" class="btn-fetch">Fetch Students</button>
+    </div>
+
+    <form id="bulkMarksForm">
+        <div class="table-container">
+            <table id="studentTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Adm No.</th>
+                        <th style="width: 50%;">Student Name</th>
+                        <th style="width: 30%;">Marks Obtained</th>
+                    </tr>
+                </thead>
+                <tbody id="studentList">
+                    </tbody>
+            </table>
+        </div>
+        
+        <button type="submit" id="submitBtn" class="btn-submit">Save & Upload All Marks</button>
+    </form>
+    
+    <div id="status" class="status-msg"></div>
+</div>
+
+<script type="module">
+    // Firebase SDK Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, writeBatch, doc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+    // Your Web App's Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhB6Bc29g-sZCV9MLu_jQCD5GdlhL2mgM",
+        authDomain: "amhs-e7f6d.firebaseapp.com",
+        projectId: "amhs-e7f6d",
+        storageBucket: "amhs-e7f6d.firebasestorage.app",
+        messagingSenderId: "226999110651",
+        appId: "1:226999110651:web:3746238cb0140f1897d95e"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const fetchBtn = document.getElementById('fetchBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const studentTable = document.getElementById('studentTable');
+    const studentList = document.getElementById('studentList');
+    const status = document.getElementById('status');
+
+    // --- FUNCTION: Fetch Students from Firestore ---
+    fetchBtn.addEventListener('click', async () => {
+        const selClass = document.getElementById('classSelect').value;
+        const selSection = document.getElementById('sectionSelect').value;
+
+        status.style.display = "none";
+        studentList.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Searching database...</td></tr>";
+        studentTable.style.display = "table";
+
+        try {
+            // Querying the 'students' collection based on Class and Section
+            const q = query(
+                collection(db, "students"), 
+                where("class", "==", selClass), 
+                where("section", "==", selSection)
+            );
+            
+            const querySnapshot = await getDocs(q);
+            studentList.innerHTML = "";
+
+            if (querySnapshot.empty) {
+                studentList.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>No students found for this selection.</td></tr>";
+                submitBtn.style.display = "none";
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const row = `
+                    <tr>
+                        <td><strong>${data.admissionNo}</strong></td>
+                        <td>${data.name}</td>
+                        <td>
+                            <input type="number" class="mark-input" 
+                                   data-adm="${data.admissionNo}" 
+                                   data-name="${data.name}" 
+                                   placeholder="0" required>
+                        </td>
+                    </tr>
+                `;
+                studentList.innerHTML += row;
+            });
+
+            submitBtn.style.display = "block";
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            alert("Error: Could not retrieve student list. Ensure your Firestore rules allow reading.");
+        }
+    });
+
+    // --- FUNCTION: Bulk Upload Marks ---
+    document.getElementById('bulkMarksForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const subject = document.getElementById('subject').value;
+        const examName = document.getElementById('examName').value;
+        const totalMarks = Number(document.getElementById('totalMarks').value);
+
+        if(!subject || !examName) {
+            alert("Please provide Subject and Exam Name at the top.");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Processing Batch Upload...";
+
+        try {
+            const batch = writeBatch(db);
+            const markInputs = document.querySelectorAll('.mark-input');
+
+            markInputs.forEach(input => {
+                // Generate a new unique ID for each mark entry
+                const markEntryRef = doc(collection(db, "test_marks"));
+                
+                batch.set(markEntryRef, {
+                    admissionNo: Number(input.dataset.adm),
+                    studentName: input.dataset.name,
+                    subject: subject,
+                    examName: examName,
+                    marks: Number(input.value),
+                    maxMarks: totalMarks,
+                    class: document.getElementById('classSelect').value,
+                    section: document.getElementById('sectionSelect').value,
+                    timestamp: Date.now()
+                });
+            });
+
+            await batch.commit();
+
+            status.innerText = `Success! Marks for ${markInputs.length} students uploaded.`;
+            status.className = "status-msg success";
+            status.style.display = "block";
+            
+            // Reset form for next entry
+            document.getElementById('bulkMarksForm').reset();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (err) {
+            console.error("Upload Error:", err);
+            alert("Failed to upload marks. Check console for details.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Save & Upload All Marks";
+        }
+    });
+</script>
+</body>
+</html>
